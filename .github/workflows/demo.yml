@@ -1,3 +1,5 @@
+# By using actions/upload-artifact@v4 we can upload files from our workflow on github
+
 name: Deploy website
 on:
   push:
@@ -25,6 +27,7 @@ jobs:
         run: npm ci
       - name: Build website
         run: npm run build
+        # Upload specific files from the workflow
       - name: Upload artifacts to github
         uses: actions/upload-artifact@v4
         with:
@@ -37,5 +40,13 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      # Keep in mind that the files from the last step is not available on this step
+      # Therefor we have to download the files from github
+      - name: Download artifacts from github
+        uses: actions/download-artifact@v4
+        with:
+          name: upload-files # Has to be the same name as we store it at the previous step
+      - name: Output download content
+        run: ls
       - name: Deploy
         run: echo "Deploying..."
