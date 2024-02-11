@@ -1,4 +1,10 @@
-# By using actions/upload-artifact@v4 we can upload files from our workflow on github
+# Artifacts are files that we can send to Github from our workflow
+# Outputs are values/data that we can use from one Job to another -> for instance, we can cache dependencies from one job and use them in others
+
+# By using actions/upload-artifact@v4 we can upload files (Artifacts) from our workflow on github
+# By using actions/cache@v4 we can cache the depes as outputs for using them in other jobs
+
+# We can set outputs by this syntax: outputName-${{ anyValue }} >> $GITHUB_OUTPUT
 
 name: Deploy website
 on:
@@ -11,6 +17,15 @@ jobs:
     steps:
       - name: Get code
         uses: actions/checkout@v4
+        # Notice that this step should be before deps installation step
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          #  This is the path for caches all the dependencies
+          path: ~/.npm
+          # This key indicate if the job should use the deps-cache or install it in case the deps has change. Therefore, it has to be unique
+          # hashFiles is a method that created a unique string base on the file content. so if the deps has changes, we'll get new generated string
+          key: deps-node-modules-${{ hashFiles('**/package-lock.json') }}
       - name: Install dependencies
         run: npm ci
       - name: Lint code
@@ -23,6 +38,11 @@ jobs:
     steps:
       - name: Get code
         uses: actions/checkout@v4
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: deps-node-modules-${{ hashFiles('**/package-lock.json') }}
       - name: Install dependencies
         run: npm ci
       - name: Build website
